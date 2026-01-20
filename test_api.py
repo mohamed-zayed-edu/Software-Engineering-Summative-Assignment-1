@@ -2,7 +2,7 @@ from unittest.mock import Mock, patch
 import pytest
 import requests
 
-from api import get_json, BASE_URL
+from api import get_json, get_metadata, BASE_URL
 
 
 class TestGetJson:
@@ -60,3 +60,24 @@ class TestGetJson:
 
         with pytest.raises(requests.Timeout):
             get_json("slow-endpoint")
+
+
+class TestGetMetadata:
+    """Tests for get_metadata function."""
+
+    @patch("api.get_json")
+    def test_get_metadata_success(self, mock_get_json):
+        """Test successful metadata retrieval."""
+        mock_metadata = {
+            "filters": [{"id": "gender", "label": "Gender"}],
+            "indicators": [{"id": "ind1", "label": "Indicator 1"}],
+            "geographicLevels": [{"code": "NAT", "label": "National"}],
+            "locations": [{"code": "E92000001", "label": "England"}],
+            "timePeriods": [{"code": "AY", "period": "2024/2025"}],
+        }
+        mock_get_json.return_value = mock_metadata
+
+        result = get_metadata("dataset123")
+
+        assert result == mock_metadata
+        mock_get_json.assert_called_once_with("data-sets/dataset123/meta")
