@@ -1,5 +1,5 @@
 import dash
-from dash import dcc, html
+from dash import dcc, html, Input, Output, callback, State
 from ui import build_home_page, build_dataset_page
 
 
@@ -9,7 +9,7 @@ def init_app() -> dash.Dash:
     Returns:
         A Dash app instance ready to run.
     """
-    app = dash.Dash(__name__)
+    app = dash.Dash("Education Data Insights Explorer")
     app.title = "Education Data Insights Explorer"
 
     app.layout = html.Div(
@@ -20,19 +20,35 @@ def init_app() -> dash.Dash:
                 style={"textAlign": "center"},
             ),
             html.Div(id="page-content"),
-            build_home_page(),
-            html.Hr(),
-            html.H2("Dataset Page 1", style={"textAlign": "center"}),
-            build_dataset_page(page_id="dataset-1"),
-            html.Hr(),
-            html.H2("Dataset Page 2", style={"textAlign": "center"}),
-            build_dataset_page(page_id="dataset-2"),
+            build_dataset_page("ks2-performance"),
         ],
     )
 
     return app
 
 
+app = init_app()
+
+
+@app.callback(
+    Output({"type": "filter-values", "index": "ks2-performance"}, "options"),
+    Input({"type": "filter-dimension", "index": "ks2-performance"}, "value"),
+    State({"type": "metadata-store", "index": "ks2-performance"}, "data"),
+)
+def update_filter_values(selected_filter_dimension, meta):
+    if not selected_filter_dimension or not meta:
+        return []
+
+    filters = meta.get("filters", [])
+    for f in filters:
+        if f.get("id") == selected_filter_dimension:
+            return [
+                {"label": opt.get("label"), "value": opt.get("id")}
+                for opt in f.get("options", [])
+            ]
+
+    return []
+
+
 if __name__ == "__main__":
-    app = init_app()
     app.run(debug=True, host="0.0.0.0", port=8080)

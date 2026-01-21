@@ -4,9 +4,7 @@ import requests
 import pandas as pd
 
 from utils import extract_filter_id, period_to_datetime
-
-# Base URL for the EES API
-BASE_URL = "https://api.education.gov.uk/statistics/v1"
+from config import BASE_URL
 
 
 def get_json(endpoint: str, params: dict | None = None) -> dict:

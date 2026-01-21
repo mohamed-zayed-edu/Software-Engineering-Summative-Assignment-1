@@ -1,6 +1,8 @@
 from dash import html, dcc
 import plotly.graph_objects as go
-
+from api import get_metadata
+from config import DATASETS
+from utils import get_dataset_title, build_dropdown_options
 
 def build_home_page() -> html.Div:
     """Build the home page with dataset selection cards.
@@ -74,12 +76,79 @@ def build_placeholder_figure(
     return fig
 
 
-def build_dataset_page(page_id: str = "default") -> html.Div:
+def build_dataset_page(dataset_key: str) -> html.Div:
+    """Build the interactive UI for a specific dataset.
+
+    Constructs the page layout with:
+    - Indicator selector (required dropdown)
+    - Time period multi-select (defaults to all available periods)
+    - Filter dimension selector (required dropdown)
+    - Filter values multi-select (populated from metadata for chosen dimension)
+    - Update Graph button (triggers callback with prevent_initial_call=True)
+    - Graph placeholder and error message display
+
+    Args:
+        dataset_key: Short key for the dataset.
+
+    Returns:
+        html.Div: Dash html.Div containing the complete dataset page layout.
+
+    Raises:
+        Returns error message div if metadata cannot be fetched.
+    """
+    if dataset_key not in DATASETS:
+        return html.Div("Dataset not found", style={"color": "red"})
+
+    dataset_id = DATASETS[dataset_key]
+    dataset_title = get_dataset_title(dataset_key)
+
+    try:
+        meta = get_metadata(dataset_id)
+        indicators = meta.get("indicators", [])
+        time_periods = meta.get("timePeriods", [])
+        filters = meta.get("filters", [])
+
+        indicator_options = build_dropdown_options(indicators) if indicators else []
+        time_period_options = (
+            build_dropdown_options(time_periods, label_key="period", id_key="period")
+            if time_periods
+            else []
+        )
+
+        # Build options for a single filter selector
+        filter_dimension_options = []
+        for filter_item in filters:
+            filter_id = filter_item.get("id") or filter_item.get("key")
+            filter_name = (
+                filter_item.get("name")
+                or filter_item.get("label")
+                or filter_id
+                or "Unknown Filter"
+            )
+            if filter_id and filter_name:
+                filter_dimension_options.append(
+                    {"label": filter_name, "value": filter_id}
+                )
+    except Exception as e:
+        print(f"Error loading dataset page for {dataset_key}: {e}")
+        import traceback
+
+        traceback.print_exc()
+        meta = {}
+        indicator_options = []
+        time_period_options = []
+        filter_dimension_options = []
+
     return html.Div(
         [
+            # Store metadata client-side to avoid re-fetching in callbacks
+            dcc.Store(
+                id={"type": "metadata-store", "index": dataset_key},
+                data=meta,
+            ),
             html.Div(
                 [
-                    html.H2("Dataset Explorer", style={"textAlign": "center"}),
+                    html.H2(dataset_title, style={"textAlign": "center"}),
                     html.Div(
                         [
                             html.Div(
@@ -88,12 +157,15 @@ def build_dataset_page(page_id: str = "default") -> html.Div:
                                     dcc.Dropdown(
                                         id={
                                             "type": "indicator-dropdown",
-                                            "index": page_id,
+                                            "index": dataset_key,
                                         },
-                                        options=[1, 2, 3],
-                                        value=None,
+                                        options=indicator_options,
+                                        value=(
+                                            indicator_options[0]["value"]
+                                            if indicator_options
+                                            else None
+                                        ),
                                         clearable=False,
-                                        placeholder="Choose an indicator...",
                                     ),
                                 ],
                                 style={"marginBottom": "1rem"},
@@ -104,18 +176,24 @@ def build_dataset_page(page_id: str = "default") -> html.Div:
                                     dcc.Dropdown(
                                         id={
                                             "type": "time-dropdown",
-                                            "index": page_id,
+                                            "index": dataset_key,
                                         },
-                                        options=[1, 2, 3],
-                                        value=[],
+                                        options=time_period_options,
+                                        value=(
+                                            [
+                                                opt["value"]
+                                                for opt in time_period_options
+                                            ]
+                                            if time_period_options
+                                            else []
+                                        ),
                                         multi=True,
-                                        placeholder="Choose time periods...",
                                     ),
                                     html.Button(
                                         "Select All",
                                         id={
                                             "type": "time-select-all",
-                                            "index": page_id,
+                                            "index": dataset_key,
                                         },
                                         n_clicks=0,
                                         style={"marginTop": "0.25rem"},
@@ -123,40 +201,45 @@ def build_dataset_page(page_id: str = "default") -> html.Div:
                                 ],
                                 style={"marginBottom": "1rem"},
                             ),
+                            # Single filter selector (required)
                             html.Div(
                                 [
-                                    html.Label("Select filter:"),
+                                    html.Label("Select filter dimension:"),
                                     dcc.Dropdown(
                                         id={
                                             "type": "filter-dimension",
-                                            "index": page_id,
+                                            "index": dataset_key,
                                         },
-                                        options=[1, 2, 3],
-                                        value=None,
+                                        options=filter_dimension_options,
+                                        value=(
+                                            filter_dimension_options[0]["value"]
+                                            if filter_dimension_options
+                                            else None
+                                        ),
                                         clearable=False,
-                                        placeholder="Choose a filter dimension...",
+                                        placeholder="Choose one filter dimension",
                                     ),
                                 ],
                                 style={"marginBottom": "1rem"},
                             ),
                             html.Div(
                                 [
-                                    html.Label("Select values (for chosen filter):"),
+                                    html.Label("Select values (for chosen dimension):"),
                                     dcc.Dropdown(
                                         id={
                                             "type": "filter-values",
-                                            "index": page_id,
+                                            "index": dataset_key,
                                         },
-                                        options=[1, 2, 3],
+                                        options=[],
                                         value=[],
                                         multi=True,
-                                        placeholder="Select filter values...",
+                                        placeholder="Select values...",
                                     ),
                                     html.Button(
                                         "Select All",
                                         id={
                                             "type": "filter-values-select-all",
-                                            "index": page_id,
+                                            "index": dataset_key,
                                         },
                                         n_clicks=0,
                                         style={"marginTop": "0.25rem"},
@@ -166,11 +249,11 @@ def build_dataset_page(page_id: str = "default") -> html.Div:
                             ),
                             html.Button(
                                 "Update Graph",
-                                id={"type": "update-button", "index": page_id},
+                                id={"type": "update-button", "index": dataset_key},
                                 n_clicks=0,
                             ),
                             html.Div(
-                                id={"type": "metadata-error", "index": page_id},
+                                id={"type": "metadata-error", "index": dataset_key},
                                 style={"color": "red", "marginBottom": "0.5rem"},
                             ),
                         ],
@@ -180,11 +263,11 @@ def build_dataset_page(page_id: str = "default") -> html.Div:
                 style={"marginBottom": "2rem"},
             ),
             dcc.Graph(
-                id={"type": "graph", "index": page_id},
+                id={"type": "graph", "index": dataset_key},
                 figure=build_placeholder_figure(),
             ),
             html.Div(
-                id={"type": "error-message", "index": page_id},
+                id={"type": "error-message", "index": dataset_key},
                 style={"color": "red"},
             ),
         ],
