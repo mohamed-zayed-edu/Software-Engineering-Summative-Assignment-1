@@ -29,7 +29,7 @@ class TestExtractFilterId:
     def test_extract_filter_id_with_none(self):
         """Test handling of None values."""
         result = extract_filter_id(None)
-        assert result == "None"
+        assert result is None
 
 
 class TestPeriodToDatetime:

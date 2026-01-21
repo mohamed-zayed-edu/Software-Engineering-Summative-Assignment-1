@@ -19,17 +19,28 @@ def find_component_by_type(component, target_type):
 
 
 def find_component_by_id(component, target_id):
-    if hasattr(component, "id") and isinstance(component.id, dict):
-        if component.id == target_id:
-            return component
-    if hasattr(component, "children"):
-        if isinstance(component.children, list):
-            for child in component.children:
-                found = find_component_by_id(child, target_id)
-                if found:
-                    return found
-        else:
-            return find_component_by_id(component.children, target_id)
+    # Flatten all components and search
+    all_components = []
+
+    def collect_components(comp):
+        if hasattr(comp, "id") and comp.id is not None:
+            all_components.append(comp)
+
+        if hasattr(comp, "children") and comp.children is not None:
+            children = comp.children
+            if isinstance(children, list):
+                for child in children:
+                    if child is not None:
+                        collect_components(child)
+            elif not isinstance(children, (str, int, float, bool)):
+                collect_components(children)
+
+    collect_components(component)
+
+    for comp in all_components:
+        if comp.id == target_id:
+            return comp
+
     return None
 
 
