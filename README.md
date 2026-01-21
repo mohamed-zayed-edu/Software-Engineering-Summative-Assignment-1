@@ -27,7 +27,16 @@ A dashboard for exploring education statistics from the Department for Education
 - Location: [ui.py](ui.py)
 - `build_home_page()`: Landing content with welcome and overview text.
 - `build_placeholder_figure(message=...)`: Creates a centered instructional figure used as the default graph placeholder.
-- `build_dataset_page(page_id="default")`: Generic dataset exploration layout with indicator dropdown, time-period multi-select, filter and values selectors, and a graph/error area.
+- `build_dataset_page(dataset_key)`: Dataset exploration layout with indicator dropdown, time-period multi-select, filter dimension and values selectors, graph, and error displays. Fetches metadata once at page load and stores it client-side (`dcc.Store`) for callback reuse.
+- Pattern-matching IDs: All components use `{"type": "component-name", "index": dataset_key}` format for dynamic callback targeting.
+
+### Utils
+
+- Location: [utils.py](utils.py)
+- `extract_filter_id(value)`: Extracts ID from `"id :: label"` format filter values.
+- `period_to_datetime(period_str)`: Converts academic year strings like `"2024/2025"` to pandas Timestamp (September 1st).
+- `get_dataset_title(dataset_key)`: Maps dataset keys to human-readable titles from config.
+- `build_dropdown_options(values, label_key, id_key)`: Transforms metadata lists into Dash dropdown option format.
 
 
 ## Setup
@@ -48,7 +57,19 @@ Open http://localhost:8080/ in your browser.
 
 ## Test
 
+Run all tests:
 ```bash
 pytest -v
 ```
+
+Automated pipeline runs on push/PR to `main` or `develop` branches:
+
+**Test Job:**
+- Matrix testing across Python 3.10, 3.11, 3.12
+- Pytest
+
+**Lint Job:**
+- Black code formatting checks
+
+View workflow: [.github/workflows/ci.yml](.github/workflows/ci.yml)
 

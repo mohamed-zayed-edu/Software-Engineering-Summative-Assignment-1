@@ -4,47 +4,73 @@ from api import get_metadata
 from config import DATASETS
 from utils import get_dataset_title, build_dropdown_options
 
-def build_home_page() -> html.Div:
-    """Build the home page with dataset selection cards.
 
-    Returns:
-        Dash html.Div containing the home page layout.
-    """
+def build_home_page() -> html.Div:
     return html.Div(
         [
             html.Div(
                 [
-                    html.Div(
-                        [
-                            html.H2(
-                                "Welcome to Education Data Insights",
-                                style={"color": "#333", "marginBottom": "1rem"},
-                            ),
-                            html.P(
-                                "Explore comprehensive education statistics from the Department for Education's"
-                                " Explore Education Statistics (EES) platform (https://explore-education-statistics.service.gov.uk/)"
-                                " through their API (https://api.education.gov.uk/statistics/docs/)."
-                                " Analyse trends through interactive visualisations.",
-                                style={
-                                    "fontSize": "16px",
-                                    "color": "#555",
-                                    "lineHeight": "1.6",
-                                    "marginBottom": "1.5rem",
-                                },
-                            ),
-                        ],
+                    html.H2(
+                        "Welcome to Education Data Insights",
+                        style={"color": "#333", "marginBottom": "1rem"},
+                    ),
+                    html.P(
+                        "Explore comprehensive education statistics from the Department for Education's "
+                        "Explore Education Statistics (EES) API. Analyse key stage performance, apprenticeship "
+                        "trends, and more through interactive visualisations.",
                         style={
-                            "backgroundColor": "#f8f9fa",
-                            "padding": "2rem",
-                            "borderRadius": "8px",
-                            "marginBottom": "2rem",
-                            "border": "1px solid #e0e0e0",
+                            "fontSize": "16px",
+                            "color": "#555",
+                            "lineHeight": "1.6",
+                            "marginBottom": "1.5rem",
+                        },
+                    ),
+                    html.P(
+                        "Select a dataset below to get started:",
+                        style={
+                            "fontSize": "16px",
+                            "color": "#333",
+                            "marginBottom": "1.5rem",
                         },
                     ),
                 ],
-                style={"maxWidth": "800px", "margin": "auto", "marginTop": "0.5rem"},
+                style={
+                    "backgroundColor": "#f8f9fa",
+                    "padding": "2rem",
+                    "borderRadius": "8px",
+                    "marginBottom": "2rem",
+                    "border": "1px solid #e0e0e0",
+                },
+            ),
+            html.Div(
+                [
+                    dcc.Link(
+                        html.Div(
+                            get_dataset_title(key),
+                            style={
+                                "padding": "1rem",
+                                "margin": "0.5rem",
+                                "backgroundColor": "#007bff",
+                                "color": "white",
+                                "borderRadius": "5px",
+                                "textAlign": "center",
+                                "cursor": "pointer",
+                                "fontSize": "16px",
+                            },
+                        ),
+                        href=f"/{key}",
+                        style={"textDecoration": "none"},
+                    )
+                    for key in DATASETS.keys()
+                ],
+                style={
+                    "display": "flex",
+                    "flexWrap": "wrap",
+                    "justifyContent": "center",
+                },
             ),
         ],
+        style={"maxWidth": "800px", "margin": "auto", "marginTop": "3rem"},
     )
 
 
@@ -272,4 +298,60 @@ def build_dataset_page(dataset_key: str) -> html.Div:
             ),
         ],
         style={"maxWidth": "800px", "margin": "auto"},
+    )
+
+
+def build_nav_bar() -> html.Div:
+    """Build navigation bar with links to pages.
+
+    Returns:
+        html.Div: Dash html.Div containing navigation with dataset links and home button.
+    """
+    nav_buttons = []
+
+    # Add Home link
+    nav_buttons.append(
+        dcc.Link(
+            "Home",
+            href="/",
+            style={
+                "display": "inline-block",
+                "marginRight": "1rem",
+                "padding": "0.5rem 1rem",
+                "backgroundColor": "#28a745",
+                "color": "white",
+                "borderRadius": "5px",
+                "textDecoration": "none",
+                "fontSize": "14px",
+            },
+        )
+    )
+
+    for dataset_key in DATASETS.keys():
+        nav_buttons.append(
+            dcc.Link(
+                get_dataset_title(dataset_key),
+                href=f"/{dataset_key}",
+                style={
+                    "display": "inline-block",
+                    "marginRight": "1rem",
+                    "padding": "0.5rem 1rem",
+                    "backgroundColor": "#007bff",
+                    "color": "white",
+                    "borderRadius": "5px",
+                    "textDecoration": "none",
+                    "fontSize": "14px",
+                },
+            )
+        )
+
+    return html.Div(
+        nav_buttons,
+        style={
+            "textAlign": "center",
+            "marginBottom": "2rem",
+            "paddingTop": "1rem",
+            "paddingBottom": "1rem",
+            "backgroundColor": "#f0f0f0",
+        },
     )

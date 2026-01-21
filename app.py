@@ -1,6 +1,7 @@
 import dash
 from dash import dcc, html, Input, Output, callback, State
-from ui import build_home_page, build_dataset_page
+from ui import build_home_page, build_dataset_page, build_nav_bar
+from config import DATASETS
 
 
 def init_app() -> dash.Dash:
@@ -20,7 +21,6 @@ def init_app() -> dash.Dash:
                 style={"textAlign": "center"},
             ),
             html.Div(id="page-content"),
-            build_dataset_page("ks2-performance"),
         ],
     )
 
@@ -49,6 +49,22 @@ def update_filter_values(selected_filter_dimension, meta):
 
     return []
 
+@app.callback(
+        Output("page-content", "children"),
+        [Input("url", "pathname")],
+    )
+def display_page(pathname: str):
+    dataset_key = pathname.strip("/") if pathname else ""
+
+    if dataset_key in DATASETS:
+        return html.Div(
+            [
+                build_nav_bar(),
+                build_dataset_page(dataset_key),
+            ]
+        )
+    else:
+        return build_home_page()
 
 if __name__ == "__main__":
     app.run(debug=True, host="0.0.0.0", port=8080)
