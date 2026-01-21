@@ -1,5 +1,6 @@
 import dash
 from dash import dcc, html
+from ui import build_home_page, build_dataset_page
 
 
 def init_app() -> dash.Dash:
@@ -19,38 +20,13 @@ def init_app() -> dash.Dash:
                 style={"textAlign": "center"},
             ),
             html.Div(id="page-content"),
-            html.Div(
-                [
-                    html.Div(
-                        [
-                            html.H2(
-                                "Welcome to Education Data Insights",
-                                style={"color": "#333", "marginBottom": "1rem"},
-                            ),
-                            html.P(
-                                "Explore comprehensive education statistics from the Department for Education's"
-                                " Explore Education Statistics (EES) platform (https://explore-education-statistics.service.gov.uk/)"
-                                " through their API (https://api.education.gov.uk/statistics/docs/)."
-                                " Analyse trends through interactive visualisations.",
-                                style={
-                                    "fontSize": "16px",
-                                    "color": "#555",
-                                    "lineHeight": "1.6",
-                                    "marginBottom": "1.5rem",
-                                },
-                            ),
-                        ],
-                        style={
-                            "backgroundColor": "#f8f9fa",
-                            "padding": "2rem",
-                            "borderRadius": "8px",
-                            "marginBottom": "2rem",
-                            "border": "1px solid #e0e0e0",
-                        },
-                    ),
-                ],
-                style={"maxWidth": "800px", "margin": "auto", "marginTop": "0.5rem"},
-            ),
+            build_home_page(),
+            html.Hr(),
+            html.H2("Dataset Page 1", style={"textAlign": "center"}),
+            build_dataset_page(page_id="dataset-1"),
+            html.Hr(),
+            html.H2("Dataset Page 2", style={"textAlign": "center"}),
+            build_dataset_page(page_id="dataset-2"),
         ],
     )
 
