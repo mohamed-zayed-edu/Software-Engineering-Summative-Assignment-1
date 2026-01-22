@@ -16,8 +16,9 @@ A dashboard for exploring education statistics from the Department for Education
 
 - Location: [api.py](api.py)
 - Helpers: `get_json(endpoint, params=None)` and `post_query(endpoint, payload)` wrap the EES API with common headers, 30s timeout, and `raise_for_status()` to raise HTTP errors.
-- Metadata: `get_metadata(dataset_id)` fetches dataset meta for querying.
-- Query pipeline: `query_dataset(dataset_id, indicator_id, geo_level_codes, period_list, filters=None)` builds criteria, resolves time period codes from metadata, paginates through all result pages, flattens responses to a DataFrame, and converts academic year periods to datetimes when possible.
+- Metadata: `get_metadata(dataset_id)` fetches dataset metadata. **Uses @lru_cache(maxsize=10) for fast repeated lookups enabling addition of more datasets without affecting code.**
+- Query pipeline: `query_dataset(dataset_id, indicator_id, geo_level_codes, period_list, filters=None)` builds criteria, resolves time period codes from metadata, paginates through all result pages, flattens responses to a DataFrame, and converts academic year periods to datetimes. **Results cached (max 50 queries) with hash-based key using tuples and automatic FIFO eviction.**
+- Cache implementation: Uses `OrderedDict` for clean FIFO eviction with `popitem(last=False)`. Helper `make_hashable()` recursively converts nested dicts/lists to tuples for cache keys.
 - Client-side filtering: `filters` uses simple `in` or `eq` semantics; filter IDs are extracted from API labels so you can pass raw IDs.
 - Non-numeric values: indicator values that cannot coerce to float are kept as strings (e.g., "suppressed"), so downstream code should handle both numeric and string types.
 - Error handling: raises `ValueError` when API warns of `NoResults`; HTTP errors propagate from `requests` exceptions.
@@ -41,11 +42,16 @@ A dashboard for exploring education statistics from the Department for Education
 `update_graph`: Main visualisation callback. Validates inputs, queries dataset, processes data using `prepare_chart_data()` helper, and renders Plotly line charts. Uses stored metadata to avoid re-fetching. Returns figures and error messages for each dataset page.
 `display_page`: Routes URL pathname to appropriate dataset page or home page.
 
-**Optimsations:**
-Metadata cached client-side in `dcc.Store` components (fetched once per dataset page load)
-All callbacks use stored metadata via State parameters instead of calling `get_metadata()` repeatedly
-Data processing logic extracted to testable `prepare_chart_data()` utility function
- - Pytest with 45 tests covering API, UI, and utilities
+**Optimisations:**
+- **Server-side caching**: 
+  - `get_metadata()` uses LRU cache (maxsize=10) for instant repeated lookups
+  - `query_dataset()` caches up to 50 query results with tuple-based keys for O(1) lookup speed
+  - Automatic FIFO eviction using OrderedDict to prevent unbounded memory growth
+- **Client-side caching**: Metadata stored in `dcc.Store` components (fetched once per dataset page load)
+- **Callback optimisation**: All callbacks use stored metadata via State parameters instead of re-fetching
+- **Code simplification**: 
+  - Data processing logic extracted to testable `prepare_chart_data()` utility function
+
 ## Setup
 
 Install dependencies:
