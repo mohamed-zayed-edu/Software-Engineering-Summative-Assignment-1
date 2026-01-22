@@ -1,6 +1,5 @@
 import dash
-from dash import dcc, html, Input, Output, callback, State, ALL
-import pandas as pd
+from dash import dcc, html, Input, Output, State, ALL, MATCH
 import plotly.express as px
 from ui import (
     build_home_page,
@@ -71,10 +70,11 @@ def update_filter_values(selected_dims, metas):
 
     return results
 
+
 @app.callback(
-        Output("page-content", "children"),
-        [Input("url", "pathname")],
-    )
+    Output("page-content", "children"),
+    [Input("url", "pathname")],
+)
 def display_page(pathname: str):
     dataset_key = pathname.strip("/") if pathname else ""
 
@@ -211,6 +211,31 @@ def update_graph(
             errors.append("")
 
     return figures, errors
+
+
+# Select All button callbacks
+@app.callback(
+    Output({"type": "time-dropdown", "index": MATCH}, "value"),
+    Input({"type": "time-select-all", "index": MATCH}, "n_clicks"),
+    State({"type": "time-dropdown", "index": MATCH}, "options"),
+    prevent_initial_call=True,
+)
+def select_all_time_periods(n_clicks, options):
+    if not n_clicks or not options:
+        raise dash.exceptions.PreventUpdate
+    return [opt["value"] for opt in options]
+
+
+@app.callback(
+    Output({"type": "filter-values", "index": MATCH}, "value"),
+    Input({"type": "filter-values-select-all", "index": MATCH}, "n_clicks"),
+    State({"type": "filter-values", "index": MATCH}, "options"),
+    prevent_initial_call=True,
+)
+def select_all_filter_values(n_clicks, options):
+    if not n_clicks or not options:
+        raise dash.exceptions.PreventUpdate
+    return [opt["value"] for opt in options]
 
 
 if __name__ == "__main__":
