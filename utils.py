@@ -1,6 +1,9 @@
+"""Utility helper functions."""
+
 import pandas as pd
 
 from config import DATASET_TITLES
+
 
 def extract_filter_id(value):
     """Extract ID from a filter value in the format "id :: label".
@@ -122,7 +125,10 @@ def prepare_chart_data(df, indicator_id, selected_dim):
     )
 
     # Split numeric and non-numeric data
-    df_numeric = df[df[indicator_id].notna() & (df[indicator_id].apply(lambda x: isinstance(x, (int, float))))].copy()
+    df_numeric = df[
+        df[indicator_id].notna()
+        & (df[indicator_id].apply(lambda x: isinstance(x, (int, float))))
+    ].copy()
     df_non_numeric = df[~df.index.isin(df_numeric.index)].copy()
 
     if df_numeric.empty:
@@ -135,6 +141,9 @@ def prepare_chart_data(df, indicator_id, selected_dim):
     if not df_non_numeric.empty:
         excluded_years = df_non_numeric["time_period"].dt.year.unique()
         period_str = ", ".join(str(y) for y in sorted(excluded_years))
-        warning_message = f"Note: Data for time period(s) {period_str} could not be plotted as values are non-numerical."
+        warning_message = (
+            f"Note: Data for time period(s) {period_str} could not be"
+            " plotted as values are non-numerical."
+        )
 
     return df_numeric, warning_message

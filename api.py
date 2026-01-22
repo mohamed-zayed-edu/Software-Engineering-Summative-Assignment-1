@@ -198,7 +198,7 @@ def query_dataset(
                 try:
                     indicator_value = float(val)
                 except (ValueError, TypeError):
-                    # Keep non-numerical values as strings (e.g., "suppressed", "N/A")
+                    # Keep non-numerical values as strings ("suppressed", "N/A", etc.)
                     indicator_value = str(val) if val is not None else None
                 break
 

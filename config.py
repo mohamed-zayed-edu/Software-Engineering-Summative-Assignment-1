@@ -1,3 +1,4 @@
+"""Configuration constants for the application."""
 # Base URL for EES API
 BASE_URL = "https://api.education.gov.uk/statistics/v1"
 
