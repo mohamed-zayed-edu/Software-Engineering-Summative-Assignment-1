@@ -4,7 +4,6 @@ import plotly.express as px
 from ui import (
     build_home_page,
     build_dataset_page,
-    build_nav_bar,
     build_placeholder_figure,
 )
 from config import DATASETS
@@ -24,10 +23,6 @@ def init_app() -> dash.Dash:
     app.layout = html.Div(
         [
             dcc.Location(id="url", refresh=False),
-            html.H1(
-                "Education Data Insights Explorer",
-                style={"textAlign": "center"},
-            ),
             html.Div(id="page-content"),
         ],
     )
@@ -79,14 +74,9 @@ def display_page(pathname: str):
     dataset_key = pathname.strip("/") if pathname else ""
 
     if dataset_key in DATASETS:
-        return html.Div(
-            [
-                build_nav_bar(),
-                build_dataset_page(dataset_key),
-            ]
-        )
+        return build_dataset_page(dataset_key, f"/{dataset_key}")
     else:
-        return build_home_page()
+        return build_home_page("/")
 
 
 @app.callback(

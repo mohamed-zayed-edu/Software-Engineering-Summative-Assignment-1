@@ -5,57 +5,165 @@ from config import DATASETS
 from utils import get_dataset_title, build_dropdown_options
 
 
-def build_home_page() -> html.Div:
+def build_header() -> html.Div:
+    """Build the header with title.
+    
+    Returns:
+        html.Div: Header component with dark blue background and title.
+    """
     return html.Div(
         [
+            html.H1(
+                "Education Data Insights Dashboard",
+                style={
+                    "color": "white",
+                    "margin": 0,
+                    "fontSize": "32px",
+                    "fontWeight": "400",
+                    "fontFamily": "'Segoe UI', 'Helvetica Neue', Arial, sans-serif",
+                    "letterSpacing": "0.5px",
+                },
+            ),
+        ],
+        style={
+            "backgroundColor": "#001d3d",
+            "padding": "1rem 2rem",
+            "marginBottom": "0",
+            "textAlign": "center",
+        },
+    )
+def build_navigation(active_path: str = "/") -> html.Div:
+    """Build navigation bar with links to all pages.
+
+    Args:
+        active_path: The current path (e.g., "/", "/attendance") used to highlight the active tab.
+
+    Returns:
+        html.Div: Navigation bar with tabs for Homepage and datasets.
+    """
+
+    normalized_path = active_path or "/"
+
+    def make_link(label: str, href: str) -> html.Div:
+        is_active = href == normalized_path
+        link_style = {
+            "padding": "1rem 2rem",
+            "color": "white",
+            "textDecoration": "none",
+            "fontSize": "16px",
+            "fontFamily": "'Segoe UI', 'Helvetica Neue', Arial, sans-serif",
+            "display": "inline-block",
+            "backgroundColor": "#6c757d",
+            "border": "1px solid #6c757d",
+        }
+        if is_active:
+            link_style.update(
+                {
+                    "backgroundColor": "#4e555b",
+                    "fontWeight": "600",
+                    "borderBottom": "3px solid #001d3d",
+                }
+            )
+        return dcc.Link(label, href=href, style=link_style)
+
+    nav_items = [make_link("Homepage", "/")]
+    for key in DATASETS.keys():
+        nav_items.append(make_link(get_dataset_title(key), f"/{key}"))
+
+    return html.Div(
+        nav_items,
+        style={
+            "backgroundColor": "#6c757d",
+            "display": "flex",
+            "justifyContent": "center",
+            "gap": "0.5rem",
+            "marginBottom": "0",
+        },
+    )
+
+
+def build_home_page(active_path: str = "/") -> html.Div:
+    return html.Div(
+        [
+            build_header(),
+            # Welcome section
             html.Div(
                 [
                     html.H2(
                         "Welcome to Education Data Insights",
-                        style={"color": "#333", "marginBottom": "1rem"},
-                    ),
-                    html.P(
-                        "Explore comprehensive education statistics from the Department for Education's "
-                        "Explore Education Statistics (EES) API. Analyse key stage performance, apprenticeship "
-                        "trends, and more through interactive visualisations.",
                         style={
-                            "fontSize": "16px",
-                            "color": "#555",
-                            "lineHeight": "1.6",
-                            "marginBottom": "1.5rem",
+                            "color": "#333",
+                            "marginBottom": "1rem",
+                            "marginTop": "0",
+                            "fontFamily": "'Segoe UI', 'Helvetica Neue', Arial, sans-serif",
+                            "fontSize": "24px",
+                            "fontWeight": "500",
                         },
                     ),
                     html.P(
-                        "Select a dataset below to get started:",
+                        [
+                            "Explore comprehensive education statistics from the Department for Education's ",
+                            html.A(
+                                "Explore Education Statistics (EES)",
+                                href="https://explore-education-statistics.service.gov.uk/",
+                                target="_blank",
+                                style={"color": "#0b7285", "textDecoration": "none", "fontWeight": "500"},
+                            ),
+                            " platform (",
+                            html.A(
+                                "API docs",
+                                href="https://api.education.gov.uk/statistics/docs/",
+                                target="_blank",
+                                style={"color": "#0b7285", "textDecoration": "none", "fontWeight": "500"},
+                            ),
+                            "). Analyse attendance, school performance, and apprenticeship trends through interactive visualisations.",
+                        ],
                         style={
-                            "fontSize": "16px",
+                            "fontSize": "17px",
+                            "color": "#555",
+                            "lineHeight": "1.6",
+                            "fontFamily": "'Segoe UI', 'Helvetica Neue', Arial, sans-serif",
+                            "marginBottom": "1rem",
+                        },
+                    ),
+                    html.P(
+                        "Select an option from below to get started:",
+                        style={
+                            "fontSize": "17px",
                             "color": "#333",
                             "marginBottom": "1.5rem",
+                            "fontFamily": "'Segoe UI', 'Helvetica Neue', Arial, sans-serif",
                         },
                     ),
                 ],
                 style={
-                    "backgroundColor": "#f8f9fa",
+                    "backgroundColor": "#e8e8e8",
                     "padding": "2rem",
-                    "borderRadius": "8px",
                     "marginBottom": "2rem",
-                    "border": "1px solid #e0e0e0",
                 },
             ),
+            # Dataset selection buttons
             html.Div(
                 [
                     dcc.Link(
-                        html.Div(
+                        html.Button(
                             get_dataset_title(key),
                             style={
-                                "padding": "1rem",
+                                "padding": "1rem 2rem",
                                 "margin": "0.5rem",
-                                "backgroundColor": "#007bff",
+                                "backgroundColor": "#888",
                                 "color": "white",
-                                "borderRadius": "5px",
-                                "textAlign": "center",
+                                "border": "none",
+                                "borderRadius": "4px",
+                                "fontFamily": "'Segoe UI', 'Helvetica Neue', Arial, sans-serif",
+                                "fontSize": "14px",
+                                "fontWeight": "500",
                                 "cursor": "pointer",
-                                "fontSize": "16px",
+                                "transition": "background-color 0.2s",
+                                "cursor": "pointer",
+                                "fontSize": "18px",
+                                "fontWeight": "500",
+                                "minWidth": "150px",
                             },
                         ),
                         href=f"/{key}",
@@ -67,10 +175,12 @@ def build_home_page() -> html.Div:
                     "display": "flex",
                     "flexWrap": "wrap",
                     "justifyContent": "center",
+                    "gap": "1rem",
+                    "marginBottom": "3rem",
                 },
             ),
         ],
-        style={"maxWidth": "800px", "margin": "auto", "marginTop": "3rem"},
+        style={"minHeight": "100vh", "backgroundColor": "#f5f5f5"},
     )
 
 
@@ -102,7 +212,7 @@ def build_placeholder_figure(
     return fig
 
 
-def build_dataset_page(dataset_key: str) -> html.Div:
+def build_dataset_page(dataset_key: str, active_path: str = "") -> html.Div:
     """Build the interactive UI for a specific dataset.
 
     Constructs the page layout with:
@@ -167,6 +277,8 @@ def build_dataset_page(dataset_key: str) -> html.Div:
 
     return html.Div(
         [
+            build_header(),
+            build_navigation(active_path or f"/{dataset_key}"),
             # Store metadata client-side to avoid re-fetching in callbacks
             dcc.Store(
                 id={"type": "metadata-store", "index": dataset_key},
@@ -174,12 +286,32 @@ def build_dataset_page(dataset_key: str) -> html.Div:
             ),
             html.Div(
                 [
-                    html.H2(dataset_title, style={"textAlign": "center"}),
+                    html.H2(
+                        dataset_title,
+                        style={
+                            "textAlign": "center",
+                            "color": "#333",
+                            "fontSize": "28px",
+                            "fontWeight": "500",
+                            "fontFamily": "'Segoe UI', 'Helvetica Neue', Arial, sans-serif",
+                            "marginTop": "2rem",
+                            "marginBottom": "1.5rem",
+                        },
+                    ),
                     html.Div(
                         [
                             html.Div(
                                 [
-                                    html.Label("Select indicator:"),
+                                    html.Label(
+                                        "Select indicator:",
+                                        style={
+                                            "fontSize": "16px",
+                                            "fontWeight": "500",
+                                            "fontFamily": "'Segoe UI', 'Helvetica Neue', Arial, sans-serif",
+                                            "marginBottom": "0.5rem",
+                                            "display": "block",
+                                        },
+                                    ),
                                     dcc.Dropdown(
                                         id={
                                             "type": "indicator-dropdown",
@@ -198,7 +330,16 @@ def build_dataset_page(dataset_key: str) -> html.Div:
                             ),
                             html.Div(
                                 [
-                                    html.Label("Select time periods (at least one):"),
+                                    html.Label(
+                                        "Select time periods (at least one):",
+                                        style={
+                                            "fontSize": "16px",
+                                            "fontWeight": "500",
+                                            "fontFamily": "'Segoe UI', 'Helvetica Neue', Arial, sans-serif",
+                                            "marginBottom": "0.5rem",
+                                            "display": "block",
+                                        },
+                                    ),
                                     dcc.Dropdown(
                                         id={
                                             "type": "time-dropdown",
@@ -222,7 +363,17 @@ def build_dataset_page(dataset_key: str) -> html.Div:
                                             "index": dataset_key,
                                         },
                                         n_clicks=0,
-                                        style={"marginTop": "0.25rem"},
+                                        style={
+                                            "marginTop": "0.5rem",
+                                            "padding": "0.5rem 1rem",
+                                            "backgroundColor": "#888",
+                                            "color": "white",
+                                            "border": "none",
+                                            "borderRadius": "4px",
+                                            "fontSize": "14px",
+                                            "fontFamily": "'Segoe UI', 'Helvetica Neue', Arial, sans-serif",
+                                            "cursor": "pointer",
+                                        },
                                     ),
                                 ],
                                 style={"marginBottom": "1rem"},
@@ -230,7 +381,16 @@ def build_dataset_page(dataset_key: str) -> html.Div:
                             # Single filter selector (required)
                             html.Div(
                                 [
-                                    html.Label("Select filter dimension:"),
+                                    html.Label(
+                                        "Select filter dimension:",
+                                        style={
+                                            "fontSize": "16px",
+                                            "fontWeight": "500",
+                                            "fontFamily": "'Segoe UI', 'Helvetica Neue', Arial, sans-serif",
+                                            "marginBottom": "0.5rem",
+                                            "display": "block",
+                                        },
+                                    ),
                                     dcc.Dropdown(
                                         id={
                                             "type": "filter-dimension",
@@ -250,7 +410,16 @@ def build_dataset_page(dataset_key: str) -> html.Div:
                             ),
                             html.Div(
                                 [
-                                    html.Label("Select values (for chosen dimension):"),
+                                    html.Label(
+                                        "Select values (for chosen dimension):",
+                                        style={
+                                            "fontSize": "16px",
+                                            "fontWeight": "500",
+                                            "fontFamily": "'Segoe UI', 'Helvetica Neue', Arial, sans-serif",
+                                            "marginBottom": "0.5rem",
+                                            "display": "block",
+                                        },
+                                    ),
                                     dcc.Dropdown(
                                         id={
                                             "type": "filter-values",
@@ -268,7 +437,17 @@ def build_dataset_page(dataset_key: str) -> html.Div:
                                             "index": dataset_key,
                                         },
                                         n_clicks=0,
-                                        style={"marginTop": "0.25rem"},
+                                        style={
+                                            "marginTop": "0.5rem",
+                                            "padding": "0.5rem 1rem",
+                                            "backgroundColor": "#888",
+                                            "color": "white",
+                                            "border": "none",
+                                            "borderRadius": "4px",
+                                            "fontSize": "14px",
+                                            "fontFamily": "'Segoe UI', 'Helvetica Neue', Arial, sans-serif",
+                                            "cursor": "pointer",
+                                        },
                                     ),
                                 ],
                                 style={"marginBottom": "1rem"},
@@ -277,6 +456,18 @@ def build_dataset_page(dataset_key: str) -> html.Div:
                                 "Update Graph",
                                 id={"type": "update-button", "index": dataset_key},
                                 n_clicks=0,
+                                style={
+                                    "padding": "0.75rem 2rem",
+                                    "backgroundColor": "#007bff",
+                                    "color": "white",
+                                    "border": "none",
+                                    "borderRadius": "4px",
+                                    "fontSize": "16px",
+                                    "fontWeight": "500",
+                                    "fontFamily": "'Segoe UI', 'Helvetica Neue', Arial, sans-serif",
+                                    "cursor": "pointer",
+                                    "marginTop": "1rem",
+                                },
                             ),
                             html.Div(
                                 id={"type": "metadata-error", "index": dataset_key},
@@ -297,61 +488,11 @@ def build_dataset_page(dataset_key: str) -> html.Div:
                 style={"color": "red"},
             ),
         ],
-        style={"maxWidth": "800px", "margin": "auto"},
-    )
-
-
-def build_nav_bar() -> html.Div:
-    """Build navigation bar with links to pages.
-
-    Returns:
-        html.Div: Dash html.Div containing navigation with dataset links and home button.
-    """
-    nav_buttons = []
-
-    # Add Home link
-    nav_buttons.append(
-        dcc.Link(
-            "Home",
-            href="/",
-            style={
-                "display": "inline-block",
-                "marginRight": "1rem",
-                "padding": "0.5rem 1rem",
-                "backgroundColor": "#28a745",
-                "color": "white",
-                "borderRadius": "5px",
-                "textDecoration": "none",
-                "fontSize": "14px",
-            },
-        )
-    )
-
-    for dataset_key in DATASETS.keys():
-        nav_buttons.append(
-            dcc.Link(
-                get_dataset_title(dataset_key),
-                href=f"/{dataset_key}",
-                style={
-                    "display": "inline-block",
-                    "marginRight": "1rem",
-                    "padding": "0.5rem 1rem",
-                    "backgroundColor": "#007bff",
-                    "color": "white",
-                    "borderRadius": "5px",
-                    "textDecoration": "none",
-                    "fontSize": "14px",
-                },
-            )
-        )
-
-    return html.Div(
-        nav_buttons,
         style={
-            "textAlign": "center",
-            "marginBottom": "2rem",
-            "paddingTop": "1rem",
-            "paddingBottom": "1rem",
-            "backgroundColor": "#f0f0f0",
+            "maxWidth": "900px",
+            "margin": "auto",
+            "padding": "0 2rem 2rem 2rem",
+            "backgroundColor": "#f5f5f5",
+            "minHeight": "100vh",
         },
     )
