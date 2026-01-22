@@ -31,45 +31,28 @@ app = init_app()
 
 
 @app.callback(
-    Output({"type": "filter-values", "index": dash.ALL}, "options"),
-    Input({"type": "filter-dimension", "index": dash.ALL}, "value"),
-    State({"type": "metadata-store", "index": dash.ALL}, "data"),
+    Output({"type": "filter-values", "index": "ks2-performance"}, "options"),
+    Input({"type": "filter-dimension", "index": "ks2-performance"}, "value"),
+    State({"type": "metadata-store", "index": "ks2-performance"}, "data"),
 )
-def update_filter_values(selected_filter_dimensions, metas):
-    if not isinstance(selected_filter_dimensions, list):
-        selected_filter_dimensions = [selected_filter_dimensions]
-    if not isinstance(metas, list):
-        metas = [metas]
+def update_filter_values(selected_filter_dimension, meta):
+    if not selected_filter_dimension or not meta:
+        return []
 
-    results = []
-    for selected_filter_dimension, meta in zip(selected_filter_dimensions, metas):
-        if not selected_filter_dimension or not meta:
-            results.append([])
-            continue
+    filters = meta.get("filters", [])
+    for f in filters:
+        if f.get("id") == selected_filter_dimension:
+            return [
+                {"label": opt.get("label"), "value": opt.get("id")}
+                for opt in f.get("options", [])
+            ]
 
-        filters = meta.get("filters", [])
-        found = False
-        for f in filters:
-            if f.get("id") == selected_filter_dimension:
-                results.append(
-                    [
-                        {"label": opt.get("label"), "value": opt.get("id")}
-                        for opt in f.get("options", [])
-                    ]
-                )
-                found = True
-                break
-
-        if not found:
-            results.append([])
-
-    return results
-
+    return []
 
 @app.callback(
-    Output("page-content", "children"),
-    [Input("url", "pathname")],
-)
+        Output("page-content", "children"),
+        [Input("url", "pathname")],
+    )
 def display_page(pathname: str):
     dataset_key = pathname.strip("/") if pathname else ""
 
@@ -82,7 +65,6 @@ def display_page(pathname: str):
         )
     else:
         return build_home_page()
-
 
 if __name__ == "__main__":
     app.run(debug=True, host="0.0.0.0", port=8080)
