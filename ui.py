@@ -1,3 +1,5 @@
+"""UI components for dashboard pages."""
+from typing import Any
 from dash import html, dcc
 import plotly.graph_objects as go
 from api import get_metadata
@@ -7,7 +9,7 @@ from utils import get_dataset_title, build_dropdown_options
 
 def build_header() -> html.Div:
     """Build the header with title.
-    
+
     Returns:
         html.Div: Header component with dark blue background and title.
     """
@@ -32,6 +34,8 @@ def build_header() -> html.Div:
             "textAlign": "center",
         },
     )
+
+
 def build_navigation(active_path: str = "/") -> html.Div:
     """Build navigation bar with links to all pages.
 
@@ -42,10 +46,10 @@ def build_navigation(active_path: str = "/") -> html.Div:
         html.Div: Navigation bar with tabs for Homepage and datasets.
     """
 
-    normalized_path = active_path or "/"
+    normalised_path = active_path or "/"
 
-    def make_link(label: str, href: str) -> html.Div:
-        is_active = href == normalized_path
+    def make_link(label: str, href: str) -> dcc.Link:
+        is_active = href == normalised_path
         link_style = {
             "padding": "1rem 2rem",
             "color": "white",
@@ -82,7 +86,11 @@ def build_navigation(active_path: str = "/") -> html.Div:
     )
 
 
-def build_home_page(active_path: str = "/") -> html.Div:
+def build_home_page() -> html.Div:
+    """Build the homepage layout with welcome message and dataset links.
+    Returns:
+        html.Div: Homepage layout component.
+    """
     return html.Div(
         [
             build_header(),
@@ -102,21 +110,31 @@ def build_home_page(active_path: str = "/") -> html.Div:
                     ),
                     html.P(
                         [
-                            "Explore comprehensive education statistics from the Department for Education's ",
+                            "Explore comprehensive education statistics from the"
+                            " Department for Education's ",
                             html.A(
                                 "Explore Education Statistics (EES)",
                                 href="https://explore-education-statistics.service.gov.uk/",
                                 target="_blank",
-                                style={"color": "#0b7285", "textDecoration": "none", "fontWeight": "500"},
+                                style={
+                                    "color": "#0b7285",
+                                    "textDecoration": "none",
+                                    "fontWeight": "500",
+                                },
                             ),
                             " platform (",
                             html.A(
                                 "API docs",
                                 href="https://api.education.gov.uk/statistics/docs/",
                                 target="_blank",
-                                style={"color": "#0b7285", "textDecoration": "none", "fontWeight": "500"},
+                                style={
+                                    "color": "#0b7285",
+                                    "textDecoration": "none",
+                                    "fontWeight": "500",
+                                },
                             ),
-                            "). Analyse attendance, school performance, and apprenticeship trends through interactive visualisations.",
+                            "). Analyse attendance, school performance, and apprenticeship trends"
+                            " through interactive visualisations.",
                         ],
                         style={
                             "fontSize": "17px",
@@ -156,13 +174,10 @@ def build_home_page(active_path: str = "/") -> html.Div:
                                 "border": "none",
                                 "borderRadius": "4px",
                                 "fontFamily": "'Segoe UI', 'Helvetica Neue', Arial, sans-serif",
-                                "fontSize": "14px",
                                 "fontWeight": "500",
                                 "cursor": "pointer",
                                 "transition": "background-color 0.2s",
-                                "cursor": "pointer",
                                 "fontSize": "18px",
-                                "fontWeight": "500",
                                 "minWidth": "150px",
                             },
                         ),
@@ -244,15 +259,19 @@ def build_dataset_page(dataset_key: str, active_path: str = "") -> html.Div:
         time_periods = meta.get("timePeriods", [])
         filters = meta.get("filters", [])
 
-        indicator_options = build_dropdown_options(indicators) if indicators else []
-        time_period_options = (
+        indicator_dicts: list[dict[str, Any]] = (
+            build_dropdown_options(indicators) if indicators else []
+        )
+        indicator_options: list[dict[str, Any]] = indicator_dicts
+        time_period_dicts: list[dict[str, Any]] = (
             build_dropdown_options(time_periods, label_key="period", id_key="period")
             if time_periods
             else []
         )
+        time_period_options: list[dict[str, Any]] = time_period_dicts
 
         # Build options for a single filter selector
-        filter_dimension_options = []
+        filter_dimension_options: list[dict[str, Any]] = []
         for filter_item in filters:
             filter_id = filter_item.get("id") or filter_item.get("key")
             filter_name = (
@@ -286,6 +305,7 @@ def build_dataset_page(dataset_key: str, active_path: str = "") -> html.Div:
             ),
             html.Div(
                 [
+                    # Dataset title
                     html.H2(
                         dataset_title,
                         style={
@@ -298,6 +318,7 @@ def build_dataset_page(dataset_key: str, active_path: str = "") -> html.Div:
                             "marginBottom": "1.5rem",
                         },
                     ),
+                    # Controls section
                     html.Div(
                         [
                             html.Div(
@@ -312,6 +333,7 @@ def build_dataset_page(dataset_key: str, active_path: str = "") -> html.Div:
                                             "display": "block",
                                         },
                                     ),
+                                    # Indicator selector
                                     dcc.Dropdown(
                                         id={
                                             "type": "indicator-dropdown",
@@ -347,10 +369,7 @@ def build_dataset_page(dataset_key: str, active_path: str = "") -> html.Div:
                                         },
                                         options=time_period_options,
                                         value=(
-                                            [
-                                                opt["value"]
-                                                for opt in time_period_options
-                                            ]
+                                            [opt["value"] for opt in time_period_options]
                                             if time_period_options
                                             else []
                                         ),
@@ -396,11 +415,9 @@ def build_dataset_page(dataset_key: str, active_path: str = "") -> html.Div:
                                             "type": "filter-dimension",
                                             "index": dataset_key,
                                         },
-                                        options=filter_dimension_options,
+                                        options=filter_dimension_options or [],
                                         value=(
-                                            filter_dimension_options[0]["value"]
-                                            if filter_dimension_options
-                                            else None
+                                            filter_dimension_options[0]["value"] if len(filter_dimension_options) > 0 else None
                                         ),
                                         clearable=False,
                                         placeholder="Choose one filter dimension",

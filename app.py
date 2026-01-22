@@ -1,3 +1,4 @@
+"""Dash app initialisation and callbacks for the education dashboard."""
 import dash
 from dash import dcc, html, Input, Output, State, ALL, MATCH
 import plotly.express as px
@@ -74,9 +75,9 @@ def display_page(pathname: str):
     dataset_key = pathname.strip("/") if pathname else ""
 
     if dataset_key in DATASETS:
-        return build_dataset_page(dataset_key, f"/{dataset_key}")
+        return build_dataset_page(dataset_key)
     else:
-        return build_home_page("/")
+        return build_home_page()
 
 
 @app.callback(
