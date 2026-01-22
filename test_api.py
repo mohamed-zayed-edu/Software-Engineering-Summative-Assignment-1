@@ -2,7 +2,17 @@ from unittest.mock import Mock, patch
 import pytest
 import requests
 import pandas as pd
-from api import get_json, get_metadata, post_query, query_dataset, BASE_URL
+from api import get_json, get_metadata, post_query, query_dataset, BASE_URL, query_cache
+
+
+@pytest.fixture(autouse=True)
+def clear_caches():
+    """Clear all caches before each test."""
+    # Clear query cache
+    query_cache.clear()
+    # Clear lru_cache for get_metadata
+    get_metadata.cache_clear()
+    yield
 
 
 class TestGetJson:

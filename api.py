@@ -1,5 +1,8 @@
 """API interaction functions for EES API."""
 
+from collections import OrderedDict
+from functools import lru_cache
+
 import requests
 import pandas as pd
 
@@ -29,11 +32,12 @@ def get_json(endpoint: str, params: dict | None = None) -> dict:
     return resp.json()
 
 
+@lru_cache(maxsize=10)
 def get_metadata(dataset_id: str) -> dict:
     """Retrieve metadata for a dataset.
 
     Fetches available indicators, filters, geographic levels,
-    locations, and time periods.
+    locations, and time periods. Results are cached for performance.
 
     Args:
         dataset_id: Unique identifier for the dataset.
@@ -73,6 +77,19 @@ def post_query(endpoint: str, payload: dict) -> dict:
     return resp.json()
 
 
+# Cache for query results
+query_cache = OrderedDict()
+
+
+def make_hashable(obj):
+    """Convert nested dicts/lists to hashable tuples."""
+    if isinstance(obj, dict):
+        return tuple(sorted((k, make_hashable(v)) for k, v in obj.items()))
+    elif isinstance(obj, list):
+        return tuple(make_hashable(item) for item in obj)
+    return obj
+
+
 def query_dataset(
     dataset_id: str,
     indicator_id: str,
@@ -84,6 +101,7 @@ def query_dataset(
 
     Fetches data from the EES API with pagination, applies client-side filtering,
     and converts time periods to datetime for time series plotting.
+    Results are cached to improve performance on repeated queries.
 
     Args:
         dataset_id: Unique identifier for the dataset.
@@ -100,6 +118,17 @@ def query_dataset(
         ValueError: If API returns no results or pagination fails.
         requests.HTTPError: If API request fails.
     """
+    # Check cache first
+    cache_key = (
+        dataset_id,
+        indicator_id,
+        tuple(sorted(geo_level_codes)),
+        tuple(sorted(period_list)),
+        make_hashable(filters) if filters else None,
+    )
+    if cache_key in query_cache:
+        return query_cache[cache_key].copy()
+
     # Get metadata to find available time period codes
     meta = get_metadata(dataset_id)
     time_periods_meta = meta.get("timePeriods", [])
@@ -218,5 +247,10 @@ def query_dataset(
         except Exception:
             # If conversion fails, just leave as-is
             pass
+
+    # Cache result with FIFO eviction
+    if len(query_cache) >= 50:
+        query_cache.popitem(last=False)  # Remove oldest entry
+    query_cache[cache_key] = df.copy()
 
     return df
