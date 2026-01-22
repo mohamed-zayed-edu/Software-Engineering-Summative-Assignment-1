@@ -32,13 +32,20 @@ A dashboard for exploring education statistics from the Department for Education
 
 ### Utils
 
-- Location: [utils.py](utils.py)
-- `extract_filter_id(value)`: Extracts ID from `"id :: label"` format filter values.
-- `period_to_datetime(period_str)`: Converts academic year strings like `"2024/2025"` to pandas Timestamp (September 1st).
-- `get_dataset_title(dataset_key)`: Maps dataset keys to human-readable titles from config.
-- `build_dropdown_options(values, label_key, id_key)`: Transforms metadata lists into Dash dropdown option format.
+`extract_label(value)`: Extracts label from `"id :: label"` format filter values (returns the label part).
+`prepare_chart_data(df, indicator_id, selected_dim)`: Processes dataframe for plotting by converting to numeric, grouping by time period and filter value, filtering non-numeric data, and generating warnings for excluded periods.
 
+### App Callbacks
 
+`update_filter_values`: Updates filter value dropdown options based on selected filter dimension. Uses stored metadata from `dcc.Store` to avoid redundant API calls. Handles multiple dataset pages via ALL pattern-matching.
+`update_graph`: Main visualisation callback. Validates inputs, queries dataset, processes data using `prepare_chart_data()` helper, and renders Plotly line charts. Uses stored metadata to avoid re-fetching. Returns figures and error messages for each dataset page.
+`display_page`: Routes URL pathname to appropriate dataset page or home page.
+
+**Optimsations:**
+Metadata cached client-side in `dcc.Store` components (fetched once per dataset page load)
+All callbacks use stored metadata via State parameters instead of calling `get_metadata()` repeatedly
+Data processing logic extracted to testable `prepare_chart_data()` utility function
+ - Pytest with 45 tests covering API, UI, and utilities
 ## Setup
 
 Install dependencies:
